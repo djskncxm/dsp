@@ -1,3 +1,3 @@
 PROJECT_NAME = "baidu_spider"
 
-CONCURRENCY = 8
+CONCURRENCY = 16

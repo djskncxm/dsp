@@ -1,2 +1,0 @@
-class Items:
-    pass
