@@ -10,7 +10,7 @@ from dsp.exceptions import DecodeError
 
 
 class Response:
-    def __int__(
+    def __init__(
         self,
         url: str,
         *,

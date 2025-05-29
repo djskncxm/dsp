@@ -36,7 +36,9 @@ class Engine:
         self.logger.debug(f"dsp started. (project name:{self.settings['LOG_LEVEL']})")
         # print(self.settings["PROJECT_NAME"])
         self.spider = spider
-        self.downloader = Downloader()
+        self.downloader = Downloader(self.crawler)
+        if hasattr(self.downloader, "open"):
+            self.downloader.open()
         self.scheduler = Scheduler()
         self.processor = Processor(self.crawler)
         if hasattr(self.scheduler, "open"):
@@ -65,6 +67,8 @@ class Engine:
                         self.logger.error(f"Error during start_requests => {e}")
                 else:
                     await self.enqueue_request(start_request)
+        if not self.running:
+            await self.close_spider()
 
     async def _fetch(self, request):
         async def _success(_response):
@@ -114,3 +118,6 @@ class Engine:
         ):
             return True
         return False
+
+    async def close_spider(self):
+        await self.downloader.close()

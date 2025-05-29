@@ -1,4 +1,4 @@
-from inspect import iscoroutine, isgenerator, isasyncgen
+from inspect import isgenerator, isasyncgen
 
 from dsp.exceptions import TransfromTypeError
 

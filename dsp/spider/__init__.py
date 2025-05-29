@@ -25,3 +25,6 @@ class Spider:
         o = cls()
         o.crawler = crawler
         return o
+
+    def __str__(self):
+        return self.__class__.__name__
