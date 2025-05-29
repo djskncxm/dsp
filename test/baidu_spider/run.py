@@ -1,17 +1,19 @@
 import asyncio
 import time
 
-from dsp.core.engine import Engine
 from dsp.utils.project import get_settings
-from dsp.settings.settings_manager import SettingManager
-from baidu import BaiduSpider
+from dsp.crawler import CrawlerProcess
+from test.baidu_spider.spider.baidu import BaiduSpider
+from test.baidu_spider.spider.baidu2 import BaiduSpider2
+
 
 async def run():
     settings = get_settings()
-    print(settings)
-    baidu = BaiduSpider()
-    engine = Engine(settings)
-    await  engine.start_spider(baidu)
+    process = CrawlerProcess(settings)
+    await process.crawl(BaiduSpider)
+    await process.crawl(BaiduSpider2)
+    await process.start()
+
 
 s = time.time()
 asyncio.run(run())

@@ -1,6 +1,5 @@
 import asyncio
 from inspect import iscoroutine
-from operator import setitem
 from typing import Optional, Generator, Callable
 
 from dsp import Request
@@ -13,12 +12,16 @@ from dsp.task_manager import TaskManager
 
 
 class Engine:
-    def __init__(self, settings):
+    def __init__(self, crawler):
+        self.crawler = crawler
         self.downloader: Optional[Downloader] = None
         self.start_requests: Optional[Generator] = None
         self.scheduler: Optional[Scheduler] = None
         self.spider: Optional[Spider] = None
-        self.task_manager: TaskManager = TaskManager(settings.getint("CONCURRENCY"))
+        self.settings = crawler.settings
+        self.task_manager: TaskManager = TaskManager(
+            self.settings.getint("CONCURRENCY")
+        )
         self.running = False
 
     async def start_spider(self, spider: Spider):
@@ -44,7 +47,7 @@ class Engine:
                     start_request = next(self.start_requests)
                 except StopIteration:
                     self.start_requests = None
-                except Exception as e:
+                except Exception:
                     if not await self._exit():
                         continue
                     self.running = False
