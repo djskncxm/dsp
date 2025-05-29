@@ -3,13 +3,21 @@ from pprint import pformat
 from collections.abc import MutableMapping
 
 from dsp.items import ItemMeat, Field
+from dsp.exceptions import ItemInitError
 
 
 class Item(MutableMapping, metaclass=ItemMeat):
     FIELDS: dict = dict()
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._values = {}
+        if args:
+            raise ItemInitError(
+                f"{self.__class__.__name__}: position args is not supported, use keyword args."
+            )
+        if kwargs:
+            for k, v in kwargs.items():
+                self[k] = v
 
     def __setitem__(self, key, value):
         if key in self.FIELDS:
@@ -36,7 +44,7 @@ class Item(MutableMapping, metaclass=ItemMeat):
     def __getattribute__(self, item):
         field = super().__getattribute__("FIELDS")
         if item in field:
-            raise AttributeError(f"请使用[{item!r}]可以获取value")
+            raise ItemInitError(f"请使用[{item!r}]可以获取value")
         else:
             return super().__getattribute__(item)
 
@@ -66,5 +74,4 @@ if __name__ == "__main__":
 
     testi = T()
     testi["url"] = "www.baidu.com"
-    # testi.url = 111
     print(testi.xxx)

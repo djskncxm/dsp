@@ -1,3 +1,4 @@
 PROJECT_NAME = "baidu_spider"
 
 CONCURRENCY = 16
+LOG_LEVEL = "INFO"

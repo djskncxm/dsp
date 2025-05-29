@@ -13,6 +13,8 @@ class Request:
         cookies: Optional[Dict] = None,
         proxy: Optional[Dict] = None,
         body: str = "",
+        encoding: str = "UTF-8",
+        meat: Optional[Dict] = None,
     ):
         self.url = url
         self.headers = headers
@@ -22,6 +24,15 @@ class Request:
         self.cookies = cookies
         self.proxy = proxy
         self.body = body
+        self.encoding = encoding
+        self._mate = meat if meat is not None else {}
+
+    def __str__(self):
+        return f"{self.url} {self.method}"
 
     def __lt__(self, other):
         return self.priority < other.priority
+
+    @property
+    def meat(self):
+        return self._mate

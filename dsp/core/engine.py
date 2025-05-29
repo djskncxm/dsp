@@ -10,10 +10,14 @@ from dsp.utils.spider import transform
 from dsp.exceptions import OutputError
 from dsp.task_manager import TaskManager
 from dsp.core.processr import Processor
+from dsp.utils.log import get_logger
 
 
 class Engine:
     def __init__(self, crawler):
+        self.logger = get_logger(
+            self.__class__.__name__, log_level=crawler.settings["LOG_LEVEL"]
+        )
         self.processor = None
         self.crawler = crawler
         self.downloader: Optional[Downloader] = None
@@ -28,6 +32,9 @@ class Engine:
 
     async def start_spider(self, spider: Spider):
         self.running = True
+        self.logger.info(f"dsp started. (project name:{self.settings['PROJECT_NAME']})")
+        self.logger.debug(f"dsp started. (project name:{self.settings['LOG_LEVEL']})")
+        # print(self.settings["PROJECT_NAME"])
         self.spider = spider
         self.downloader = Downloader()
         self.scheduler = Scheduler()
@@ -50,10 +57,12 @@ class Engine:
                     start_request = next(self.start_requests)
                 except StopIteration:
                     self.start_requests = None
-                except Exception:
+                except Exception as e:
                     if not await self._exit():
                         continue
                     self.running = False
+                    if self.start_requests is not None:
+                        self.logger.error(f"Error during start_requests => {e}")
                 else:
                     await self.enqueue_request(start_request)
 
