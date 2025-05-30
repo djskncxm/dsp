@@ -1,3 +1,4 @@
+import importlib
 import os
 import sys
 
@@ -26,3 +27,18 @@ def merge_settings(spider, settings):
     if hasattr(spider, "custom_settings"):
         custom_settings = getattr(spider)
         settings.update_values(custom_settings)
+
+
+def load_class(_path: str):
+    if not isinstance(_path, str):
+        if callable(_path):
+            return _path
+        else:
+            raise TypeError(f"args expected string or object got => {type(_path)}")
+    module, name = _path.rsplit(".", 1)
+    mod = importlib.import_module(module)
+    try:
+        cls = getattr(mod, name)
+    except AttributeError:
+        raise NameError(f"module{module!r} doesn't define any object named {name!r}")
+    return cls

@@ -3,7 +3,6 @@ from inspect import iscoroutine
 from typing import Optional, Generator, Callable
 
 from dsp import Request, Item
-from dsp.core.downloader import Downloader
 from dsp.core.scheduler import Scheduler
 from dsp.spider import Spider
 from dsp.utils.spider import transform
@@ -11,6 +10,8 @@ from dsp.exceptions import OutputError
 from dsp.task_manager import TaskManager
 from dsp.core.processr import Processor
 from dsp.utils.log import get_logger
+from dsp.utils.project import load_class
+from dsp.core.downloader import DownloaderBase
 
 
 class Engine:
@@ -20,7 +21,7 @@ class Engine:
         )
         self.processor = None
         self.crawler = crawler
-        self.downloader: Optional[Downloader] = None
+        self.downloader: Optional[DownloaderBase] = None
         self.start_requests: Optional[Generator] = None
         self.scheduler: Optional[Scheduler] = None
         self.spider: Optional[Spider] = None
@@ -30,13 +31,21 @@ class Engine:
         )
         self.running = False
 
+    def _get_downloader(self):
+        downloader_cls = load_class(self.settings["DOWNLOAD"])
+        if not issubclass(downloader_cls, DownloaderBase):
+            raise TypeError(
+                f"The downloader class ({self.settings['DOWNLOAD']}) dosen't fully implemented require interface"
+            )
+        return downloader_cls
+
     async def start_spider(self, spider: Spider):
         self.running = True
         self.logger.info(f"dsp started. (project name:{self.settings['PROJECT_NAME']})")
         self.logger.debug(f"dsp started. (project name:{self.settings['LOG_LEVEL']})")
-        # print(self.settings["PROJECT_NAME"])
         self.spider = spider
-        self.downloader = Downloader(self.crawler)
+        downloader_cls = self._get_downloader()
+        self.downloader = downloader_cls.create_instance(self.crawler)
         if hasattr(self.downloader, "open"):
             self.downloader.open()
         self.scheduler = Scheduler()
@@ -80,6 +89,8 @@ class Engine:
                     return transform(_outputs)
 
         _response = await self.downloader.fetch(request)
+        if _response is None:
+            return None
         output = await _success(_response)
         return output
 
@@ -89,7 +100,6 @@ class Engine:
             if outputs:
                 await self._handle_spider_output(outputs)
 
-        # asyncio.create_task(crawl_task())
         await self.task_manager.semaphore.acquire()
         self.task_manager.create_task(crawl_task())
 
